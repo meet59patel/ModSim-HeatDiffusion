@@ -203,6 +203,51 @@ function Diffusion() {
           });
         }
 
+        const ro = [0, numRows - 1];
+        const col = [0, numCols - 1];
+
+        if (method === 2) {
+          ro.forEach((roi) => {
+            for (let i = 1; i < numCols - 1; i++) {
+              if (roi === 0) {
+                gridCopy[roi][i] = g[roi + 1][i];
+              } else {
+                gridCopy[roi][i] = g[roi - 1][i];
+              }
+            }
+          });
+
+          col.forEach((coi) => {
+            for (let i = 0; i < numRows; i++) {
+              if (coi === 0) {
+                gridCopy[i][coi] = g[i][coi + 1];
+              } else {
+                gridCopy[i][coi] = g[i][coi - 1];
+              }
+            }
+          });
+        } else if (method === 3) {
+          ro.forEach((roi) => {
+            for (let i = 1; i < numCols - 1; i++) {
+              if (roi === 0) {
+                gridCopy[roi][i] = g[numRows - 2][i];
+              } else {
+                gridCopy[roi][i] = g[1][i];
+              }
+            }
+          });
+
+          col.forEach((coi) => {
+            for (let i = 0; i < numRows; i++) {
+              if (coi === 0) {
+                gridCopy[i][coi] = g[i][numCols - 2];
+              } else {
+                gridCopy[i][coi] = g[i][1];
+              }
+            }
+          });
+        }
+
         count = count + 1;
 
         plotcell.map((pp, i) => {
@@ -226,7 +271,16 @@ function Diffusion() {
     });
 
     setTimeout(runSimulation, 50);
-  }, [numRows, numCols, celltemp, plotcell, keepconst, filter, useweights]);
+  }, [
+    numRows,
+    numCols,
+    celltemp,
+    plotcell,
+    keepconst,
+    filter,
+    useweights,
+    method,
+  ]);
 
   function handleMethods(e) {
     if (e.target.value === 1) {
