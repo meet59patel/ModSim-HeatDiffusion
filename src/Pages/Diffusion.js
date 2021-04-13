@@ -15,6 +15,8 @@ import {
   Switch,
   Slider,
   Card,
+  TextField,
+  Box,
 } from '@material-ui/core';
 import produce from 'immer';
 import rgbToHex from '../Utils/rgbToHex';
@@ -42,7 +44,7 @@ const useStyles = makeStyles(() => ({
     margin: 16,
   },
   slider: {
-    width: 500,
+    width: 700,
   },
 
   card: {
@@ -57,47 +59,55 @@ var gdata = [];
 const marks = [
   {
     value: 0,
+    label: '-50°C',
+  },
+  {
+    value: 0.1667,
+    label: '-25°C',
+  },
+  {
+    value: 0.3333,
     label: '0°C',
   },
   {
-    value: 0.1,
-    label: '5°C',
-  },
-  {
-    value: 0.2,
+    value: 0.4,
     label: '10°C',
   },
   {
-    value: 0.3,
-    label: '15°C',
-  },
-  {
-    value: 0.4,
+    value: 0.4667,
     label: '20°C',
   },
   {
-    value: 0.5,
-    label: '25°C',
-  },
-  {
-    value: 0.6,
+    value: 0.5333,
     label: '30°C',
   },
   {
-    value: 0.7,
-    label: '35°C',
-  },
-  {
-    value: 0.8,
+    value: 0.6,
     label: '40°C',
   },
   {
-    value: 0.9,
-    label: '45°C',
+    value: 0.6667,
+    label: '50°C',
+  },
+  {
+    value: 0.7333,
+    label: '60°C',
+  },
+  {
+    value: 0.8,
+    label: '70°C',
+  },
+  {
+    value: 0.8667,
+    label: '80°C',
+  },
+  {
+    value: 0.9333,
+    label: '90°C',
   },
   {
     value: 1,
-    label: '50°C',
+    label: '100°C',
   },
 ];
 
@@ -119,6 +129,8 @@ function Diffusion() {
     addPlotCell,
     setBoundaryTemp,
     setIntmTemp,
+    filter,
+    setFilter,
   } = useRootContext();
 
   const classes = useStyles();
@@ -126,6 +138,7 @@ function Diffusion() {
   const [gridBorder, setBorder] = useState(true);
   const [keepconst, setKeepConst] = useState(true);
   const [plotted, setPlotted] = useState(false);
+  const [useweights, setUseWeights] = useState(false);
   const [selectedCellTemp, setSelectedCellTemp] = useState(false);
 
   const [grid, setGrid] = useState(() => {
@@ -176,7 +189,9 @@ function Diffusion() {
               NE,
               NW,
               SE,
-              SW
+              SW,
+              filter,
+              useweights
             );
           }
         }
@@ -200,7 +215,10 @@ function Diffusion() {
 
           // console.log(gridCopy[pp[0]][pp[1]]);
 
-          gdata[i]['data'].push([count, (1 - gridCopy[pp[0]][pp[1]]) * 50]);
+          gdata[i]['data'].push([
+            count,
+            (1 - gridCopy[pp[0]][pp[1]] - 0.3333) * 150,
+          ]);
 
           return 0;
         });
@@ -208,7 +226,7 @@ function Diffusion() {
     });
 
     setTimeout(runSimulation, 50);
-  }, [numRows, numCols, celltemp, plotcell, keepconst]);
+  }, [numRows, numCols, celltemp, plotcell, keepconst, filter, useweights]);
 
   function handleMethods(e) {
     if (e.target.value === 1) {
@@ -327,6 +345,11 @@ function Diffusion() {
   const handleCellTemp = (event, newValue) => {
     setSelectedCellTemp(1 - newValue);
   };
+
+  function handleFilter(keyval) {
+    console.log(filter);
+    setFilter(keyval);
+  }
 
   function valuetext(value) {
     return `${value}°C`;
@@ -451,12 +474,27 @@ function Diffusion() {
                 name="checkedB"
               />
             }
-            label="Keep Constant Temperature on selected spots"
+            label="Keep Constant Temperature on selected cells"
+          />
+          <FormControlLabel
+            control={
+              <Switch
+                checked={useweights}
+                onChange={(e) => setUseWeights(!useweights)}
+                name="checkedB"
+              />
+            }
+            label="Use Weights in propagation"
           />
         </Grid>
       </Grid>
 
-      <Grid container justify="center" className={classes.gridcont}>
+      <Grid
+        container
+        justify="center"
+        className={classes.gridcont}
+        spacing={10}
+      >
         <Grid item>
           <Typography id="discrete-slider" gutterBottom>
             Boundary Temperature
@@ -464,7 +502,7 @@ function Diffusion() {
           <Slider
             align="center"
             className={classes.slider}
-            defaultValue={0.4}
+            defaultValue={0.5333}
             onChangeCommitted={handleBorderTemp}
             getAriaValueText={valuetext}
             aria-labelledby="discrete-slider-restrict"
@@ -479,7 +517,7 @@ function Diffusion() {
           </Typography>
           <Slider
             className={classes.slider}
-            defaultValue={0.6}
+            defaultValue={1}
             onChangeCommitted={handleIntmTemp}
             getAriaValueText={valuetext}
             aria-labelledby="discrete-slider-restrict"
@@ -505,6 +543,130 @@ function Diffusion() {
             max={1}
           />
         </Grid>
+        {useweights ? (
+          <Grid item>
+            <Typography variant="h6">Filter</Typography>
+            <Box
+              display="flex"
+              justifyContent="center"
+              bgcolor="background.paper"
+            >
+              <Box p={1}>
+                <TextField
+                  value={filter['00']}
+                  onChange={(e) => {
+                    handleFilter({ key: '00', val: e.target.value });
+                  }}
+                  label="(0,0)"
+                  variant="outlined"
+                  size="small"
+                />
+              </Box>
+              <Box p={1}>
+                <TextField
+                  value={filter['01']}
+                  onChange={(e) => {
+                    handleFilter({ key: '01', val: e.target.value });
+                  }}
+                  label="(0,1)"
+                  variant="outlined"
+                  size="small"
+                />
+              </Box>
+              <Box p={1}>
+                <TextField
+                  value={filter['02']}
+                  onChange={(e) => {
+                    handleFilter({ key: '02', val: e.target.value });
+                  }}
+                  label="(0,2)"
+                  variant="outlined"
+                  size="small"
+                />
+              </Box>
+            </Box>
+            <Box
+              display="flex"
+              justifyContent="center"
+              bgcolor="background.paper"
+            >
+              <Box p={1}>
+                <TextField
+                  value={filter['10']}
+                  onChange={(e) => {
+                    handleFilter({ key: '10', val: e.target.value });
+                  }}
+                  label="(1,0)"
+                  variant="outlined"
+                  size="small"
+                />
+              </Box>
+              <Box p={1}>
+                <TextField
+                  value={filter['11']}
+                  onChange={(e) => {
+                    handleFilter({ key: '11', val: e.target.value });
+                  }}
+                  label="(1,1)"
+                  variant="outlined"
+                  size="small"
+                />
+              </Box>
+              <Box p={1}>
+                <TextField
+                  value={filter['12']}
+                  onChange={(e) => {
+                    handleFilter({ key: '12', val: e.target.value });
+                  }}
+                  label="(1,2)"
+                  variant="outlined"
+                  size="small"
+                />
+              </Box>
+            </Box>
+            <Box
+              display="flex"
+              justifyContent="center"
+              bgcolor="background.paper"
+            >
+              <Box p={1}>
+                <TextField
+                  value={filter['20']}
+                  onChange={(e) => {
+                    handleFilter({ key: '20', val: e.target.value });
+                  }}
+                  label="(2,0)"
+                  variant="outlined"
+                  size="small"
+                />
+              </Box>
+              <Box p={1}>
+                <TextField
+                  value={filter['21']}
+                  onChange={(e) => {
+                    handleFilter({ key: '21', val: e.target.value });
+                  }}
+                  label="(2,1)"
+                  variant="outlined"
+                  size="small"
+                />
+              </Box>
+              <Box p={1}>
+                <TextField
+                  value={filter['22']}
+                  onChange={(e) => {
+                    handleFilter({ key: '22', val: e.target.value });
+                  }}
+                  label="(2,2)"
+                  variant="outlined"
+                  size="small"
+                />
+              </Box>
+            </Box>
+          </Grid>
+        ) : (
+          ''
+        )}
       </Grid>
 
       <Grid container justify="center" className={classes.gridcont}>

@@ -1,4 +1,4 @@
-import React, { useContext, useReducer, useEffect } from 'react';
+import React, { useContext, useReducer, useEffect } from "react";
 
 //const url = 'https://course-api.com/react-useReducer-cart-project'
 const RootContext = React.createContext();
@@ -9,76 +9,102 @@ const initialState = {
   running: false,
   numRows: 10,
   numCols: 30,
-  boundaryTemp: 0.6,
-  intermediateTemp: 0.4,
+  boundaryTemp: 0.4667,
+  intermediateTemp: 0,
+  celltemp: [],
   plotcell: [],
   graphdata: [],
-  celltemp: [],
+  filter: {
+    "00": 0.0625,
+    "01": 0.125,
+    "02": 0.0625,
+    "10": 0.125,
+    "11": 0.25,
+    "12": 0.125,
+    "20": 0.0625,
+    "21": 0.125,
+    "22": 0.0625,
+  },
 };
 
 const reducer = (state, action) => {
-  if (action.type === 'SET_RUNNING') {
+  if (action.type === "SET_RUNNING") {
     return { ...state, running: action.payload };
   }
-  if (action.type === 'SET_BOUND_TEMP') {
+  if (action.type === "SET_BOUND_TEMP") {
     return { ...state, boundaryTemp: action.payload };
   }
-  if (action.type === 'SET_INTM_TEMP') {
+  if (action.type === "SET_INTM_TEMP") {
     return { ...state, intermediateTemp: action.payload };
   }
-  if (action.type === 'SET_METHOD') {
+  if (action.type === "SET_METHOD") {
     return { ...state, method: action.payload };
   }
-  if (action.type === 'ADD_CELLTEMP') {
+  if (action.type === "ADD_CELLTEMP") {
     return { ...state, celltemp: [...state.celltemp, action.payload] };
   }
-  if (action.type === 'ADD_PLOTCELL') {
+  if (action.type === "ADD_PLOTCELL") {
     return { ...state, plotcell: [...state.plotcell, action.payload] };
   }
-  if (action.type === 'CLEAR_TEMP') {
+  if (action.type === "CLEAR_TEMP") {
     return { ...state, celltemp: [], plotcell: [] };
   }
-  if (action.type === 'SET_GRAPH_DATA') {
+  if (action.type === "SET_GRAPH_DATA") {
     return { ...state, graphdata: action.payload };
   }
+  if (action.type === "SET_FILTER") {
 
-  throw new Error('no matching action type');
+    var key = action.payload["key"];
+    var val = action.payload["val"];
+
+    var dummfilter = state.filter;
+
+    dummfilter[key] = val;
+
+    return { ...state, filter: dummfilter};
+  }
+
+  throw new Error("no matching action type");
 };
 
 const RootContextProvider = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
 
   const setRunning = (run) => {
-    dispatch({ type: 'SET_RUNNING', payload: run });
+    dispatch({ type: "SET_RUNNING", payload: run });
   };
   const setBoundaryTemp = (val) => {
-    dispatch({ type: 'SET_BOUND_TEMP', payload: val });
+    dispatch({ type: "SET_BOUND_TEMP", payload: val });
   };
-
   const setIntmTemp = (val) => {
-    dispatch({ type: 'SET_INTM_TEMP', payload: val });
+    dispatch({ type: "SET_INTM_TEMP", payload: val });
   };
-
   const setMethod = (method) => {
-    dispatch({ type: 'SET_METHOD', payload: method });
+    dispatch({ type: "SET_METHOD", payload: method });
   };
 
   const addCellTemp = (val) => {
-    dispatch({ type: 'ADD_CELLTEMP', payload: val });
+    dispatch({ type: "ADD_CELLTEMP", payload: val });
   };
 
   const addPlotCell = (val) => {
-    dispatch({ type: 'ADD_PLOTCELL', payload: val });
+    dispatch({ type: "ADD_PLOTCELL", payload: val });
   };
 
   const clearTemp = () => {
-    dispatch({ type: 'CLEAR_TEMP' });
+    dispatch({ type: "CLEAR_TEMP" });
   };
 
   const setGraphdata = (data) => {
     // console.log(data);
-    dispatch({ type: 'SET_GRAPH_DATA', payload: data });
+    dispatch({ type: "SET_GRAPH_DATA", payload: data });
   };
+
+  const setFilter = (data) => {
+    dispatch({ type: "SET_FILTER" , payload: data });
+  };
+
+
 
   useEffect(() => {
     // dispatch({ type: 'GET_TOTALS' })
@@ -91,11 +117,12 @@ const RootContextProvider = ({ children }) => {
         setMethod,
         setRunning,
         addCellTemp,
+        clearTemp,
+        addPlotCell,
         setGraphdata,
         setBoundaryTemp,
         setIntmTemp,
-        clearTemp,
-        addPlotCell,
+        setFilter
       }}
     >
       {children}
