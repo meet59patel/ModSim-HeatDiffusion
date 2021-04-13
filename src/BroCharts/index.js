@@ -1,24 +1,23 @@
-import React from "react";
+import React from 'react';
 
-import { Chart } from "react-charts";
+import { Chart } from 'react-charts';
 
-import useLagRadar from "./useLagRadar";
-import ResizableBox from "./ResizableBox";
-import {useRootContext} from '../Context/RootState';
+import useLagRadar from './useLagRadar';
+import ResizableBox from './ResizableBox';
+import { useRootContext } from '../Context/RootState';
 
-import "./styles.css";
+import './styles.css';
 
 export default function App() {
-
   const [{ activeSeriesIndex, activeDatumIndex }, setState] = React.useState({
     activeSeriesIndex: -1,
-    activeDatumIndex: -1
+    activeDatumIndex: -1,
   });
 
-  const {graphdata} = useRootContext(); 
+  const { graphdata } = useRootContext();
 
   return (
-    <div>
+    <div style={{ margin: '200px' }}>
       {/* {JSON.stringify({ activeSeriesIndex, activeDatumIndex }, null, 2)} */}
       <MyChart
         data={graphdata}
@@ -36,13 +35,13 @@ function MyChart({
   elementType,
   activeDatumIndex,
   activeSeriesIndex,
-  setState
+  setState,
 }) {
   useLagRadar();
 
   const series = React.useMemo(
     () => ({
-      type: elementType
+      type: elementType,
     }),
     [elementType]
   );
@@ -51,33 +50,33 @@ function MyChart({
     () => [
       {
         primary: true,
-        type: "ordinal",
-        position: "bottom"
+        type: 'ordinal',
+        position: 'bottom',
       },
       {
-        type: "linear",
-        position: "left",
-        stacked: true
-      }
+        type: 'linear',
+        position: 'left',
+        stacked: true,
+      },
     ],
     []
   );
 
   const getSeriesStyle = React.useCallback(
-    series => ({
+    (series) => ({
       color: `url(#${series.index % 4})`,
       opacity:
         activeSeriesIndex > -1
           ? series.index === activeSeriesIndex
             ? 1
             : 0.3
-          : 1
+          : 1,
     }),
     [activeSeriesIndex]
   );
 
   const getDatumStyle = React.useCallback(
-    datum => ({
+    (datum) => ({
       r:
         activeDatumIndex === datum.index &&
         activeSeriesIndex === datum.seriesIndex
@@ -88,16 +87,16 @@ function MyChart({
           ? 3
           : datum.otherHovered
           ? 2
-          : 2
+          : 2,
     }),
     [activeDatumIndex, activeSeriesIndex]
   );
 
   const onFocus = React.useCallback(
-    focused =>
+    (focused) =>
       setState({
         activeSeriesIndex: focused ? focused.series.id : -1,
-        activeDatumIndex: focused ? focused.index : -1
+        activeDatumIndex: focused ? focused.index : -1,
       }),
     [setState]
   );

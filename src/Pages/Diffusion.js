@@ -13,6 +13,8 @@ import {
   Select,
   MenuItem,
   Switch,
+  Slider,
+  Card,
 } from '@material-ui/core';
 import produce from 'immer';
 import rgbToHex from '../Utils/rgbToHex';
@@ -39,11 +41,65 @@ const useStyles = makeStyles(() => ({
   text: {
     margin: 16,
   },
+  slider: {
+    width: 500,
+  },
+
+  card: {
+    padding: 12,
+  },
 }));
 
 var count = 0;
 
 var gdata = [];
+
+const marks = [
+  {
+    value: 0,
+    label: '0°C',
+  },
+  {
+    value: 0.1,
+    label: '5°C',
+  },
+  {
+    value: 0.2,
+    label: '10°C',
+  },
+  {
+    value: 0.3,
+    label: '15°C',
+  },
+  {
+    value: 0.4,
+    label: '20°C',
+  },
+  {
+    value: 0.5,
+    label: '25°C',
+  },
+  {
+    value: 0.6,
+    label: '30°C',
+  },
+  {
+    value: 0.7,
+    label: '35°C',
+  },
+  {
+    value: 0.8,
+    label: '40°C',
+  },
+  {
+    value: 0.9,
+    label: '45°C',
+  },
+  {
+    value: 1,
+    label: '50°C',
+  },
+];
 
 function Diffusion() {
   const {
@@ -55,23 +111,22 @@ function Diffusion() {
     boundaryTemp,
     method,
     setMethod,
-    addHot,
-    addCold,
-    addAmb,
-    hot,
-    cold,
-    amb,
+    celltemp,
+    addCellTemp,
     clearTemp,
     plotcell,
     setGraphdata,
     addPlotCell,
+    setBoundaryTemp,
+    setIntmTemp,
   } = useRootContext();
 
   const classes = useStyles();
 
   const [gridBorder, setBorder] = useState(true);
-
+  const [keepconst, setKeepConst] = useState(true);
   const [plotted, setPlotted] = useState(false);
+  const [selectedCellTemp, setSelectedCellTemp] = useState(false);
 
   const [grid, setGrid] = useState(() => {
     return generateAnsorbingGrid(
@@ -79,17 +134,9 @@ function Diffusion() {
       numCols,
       intermediateTemp,
       boundaryTemp,
-      hot,
-      cold,
-      amb
+      celltemp
     );
   });
-
-  const [temptype, setTempType] = useState('hot');
-
-  const handleTempType = (event) => {
-    setTempType(event.target.value);
-  };
 
   const [cellSelection, setCellSelection] = useState('temp');
 
@@ -134,17 +181,12 @@ function Diffusion() {
           }
         }
 
-        hot.forEach(([xx, yy]) => {
-          gridCopy[xx][yy] = 0;
-        });
-
-        cold.forEach(([xx, yy]) => {
-          gridCopy[xx][yy] = 1;
-        });
-
-        amb.forEach(([xx, yy]) => {
-          gridCopy[xx][yy] = 0.5;
-        });
+        if (keepconst) {
+          celltemp.map((pp, i) => {
+            gridCopy[pp[0]][pp[1]] = pp[2];
+            return 1;
+          });
+        }
 
         count = count + 1;
 
@@ -166,7 +208,7 @@ function Diffusion() {
     });
 
     setTimeout(runSimulation, 50);
-  }, [numRows, numCols, hot, cold, amb, plotcell]);
+  }, [numRows, numCols, celltemp, plotcell, keepconst]);
 
   function handleMethods(e) {
     if (e.target.value === 1) {
@@ -177,9 +219,7 @@ function Diffusion() {
           numCols,
           intermediateTemp,
           boundaryTemp,
-          hot,
-          cold,
-          amb
+          celltemp
         )
       );
     } else if (e.target.value === 2) {
@@ -190,9 +230,7 @@ function Diffusion() {
           numCols,
           intermediateTemp,
           boundaryTemp,
-          hot,
-          cold,
-          amb
+          celltemp
         )
       );
     } else {
@@ -203,9 +241,7 @@ function Diffusion() {
           numCols,
           intermediateTemp,
           boundaryTemp,
-          hot,
-          cold,
-          amb
+          celltemp
         )
       );
     }
@@ -219,9 +255,7 @@ function Diffusion() {
           numCols,
           intermediateTemp,
           boundaryTemp,
-          hot,
-          cold,
-          amb
+          celltemp
         )
       );
     } else if (method === 2) {
@@ -231,9 +265,7 @@ function Diffusion() {
           numCols,
           intermediateTemp,
           boundaryTemp,
-          hot,
-          cold,
-          amb
+          celltemp
         )
       );
     } else {
@@ -243,9 +275,7 @@ function Diffusion() {
           numCols,
           intermediateTemp,
           boundaryTemp,
-          hot,
-          cold,
-          amb
+          celltemp
         )
       );
     }
@@ -260,8 +290,6 @@ function Diffusion() {
           numCols,
           intermediateTemp,
           boundaryTemp,
-          [],
-          [],
           []
         )
       );
@@ -272,8 +300,6 @@ function Diffusion() {
           numCols,
           intermediateTemp,
           boundaryTemp,
-          [],
-          [],
           []
         )
       );
@@ -284,19 +310,30 @@ function Diffusion() {
           numCols,
           intermediateTemp,
           boundaryTemp,
-          [],
-          [],
           []
         )
       );
     }
   }
 
+  const handleBorderTemp = (event, newValue) => {
+    setBoundaryTemp(1 - newValue);
+  };
+
+  const handleIntmTemp = (event, newValue) => {
+    setIntmTemp(1 - newValue);
+  };
+
+  const handleCellTemp = (event, newValue) => {
+    setSelectedCellTemp(1 - newValue);
+  };
+
+  function valuetext(value) {
+    return `${value}°C`;
+  }
+
   return (
     <>
-      <Typography className={classes.text} align="center" variant="h4">
-        Heat Diffusion Simulation
-      </Typography>
       <Grid container justify="center">
         <Grid item>
           <Button
@@ -395,30 +432,79 @@ function Diffusion() {
       </Grid>
 
       <Grid container justify="center" className={classes.gridcont}>
-        <FormControl component="fieldset">
-          <FormLabel component="legend">Temperature Type</FormLabel>
-          <RadioGroup
-            row
-            aria-label="Temperature Type"
-            name="Temperature Type"
-            value={temptype}
-            onChange={handleTempType}
-          >
-            <FormControlLabel value="hot" control={<Radio />} label="Hot" />
-            <FormControlLabel value="cold" control={<Radio />} label="Cold" />
-            <FormControlLabel value="amb" control={<Radio />} label="Ambient" />
-          </RadioGroup>
-        </FormControl>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={gridBorder}
-              onChange={(e) => setBorder(e.target.checked)}
-              name="checkedA"
-            />
-          }
-          label="Grid"
-        />
+        <Grid item>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={gridBorder}
+                onChange={(e) => setBorder(e.target.checked)}
+                name="checkedA"
+              />
+            }
+            label="Grid"
+          />
+          <FormControlLabel
+            control={
+              <Switch
+                checked={keepconst}
+                onChange={(e) => setKeepConst(e.target.checked)}
+                name="checkedB"
+              />
+            }
+            label="Keep Constant Temperature on selected spots"
+          />
+        </Grid>
+      </Grid>
+
+      <Grid container justify="center" className={classes.gridcont}>
+        <Grid item>
+          <Typography id="discrete-slider" gutterBottom>
+            Boundary Temperature
+          </Typography>
+          <Slider
+            align="center"
+            className={classes.slider}
+            defaultValue={0.4}
+            onChangeCommitted={handleBorderTemp}
+            getAriaValueText={valuetext}
+            aria-labelledby="discrete-slider-restrict"
+            step={null}
+            valueLabelDisplay="auto"
+            marks={marks}
+            min={0}
+            max={1}
+          />
+          <Typography id="discrete-slider" gutterBottom>
+            Intermediate Temperature
+          </Typography>
+          <Slider
+            className={classes.slider}
+            defaultValue={0.6}
+            onChangeCommitted={handleIntmTemp}
+            getAriaValueText={valuetext}
+            aria-labelledby="discrete-slider-restrict"
+            step={null}
+            valueLabelDisplay="auto"
+            marks={marks}
+            min={0}
+            max={1}
+          />
+          <Typography id="discrete-slider" gutterBottom>
+            Cell Temperature
+          </Typography>
+          <Slider
+            className={classes.slider}
+            defaultValue={0.8}
+            onChangeCommitted={handleCellTemp}
+            getAriaValueText={valuetext}
+            aria-labelledby="discrete-slider-restrict"
+            step={null}
+            valueLabelDisplay="auto"
+            marks={marks}
+            min={0}
+            max={1}
+          />
+        </Grid>
       </Grid>
 
       <Grid container justify="center" className={classes.gridcont}>
@@ -441,50 +527,53 @@ function Diffusion() {
         </FormControl>
       </Grid>
       <Grid container justify="center" className={classes.gridcont}>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: `repeat(${numCols}, 20px)`,
-          }}
-        >
-          {grid.map((rows, i) =>
-            rows.map((col, k) => (
-              <div
-                key={`${i}-${k}`}
-                onClick={() => {
-                  if (cellSelection === 'plot') {
-                    // console.log("addceel bro");
-                    addPlotCell([i, k]);
-                  } else {
-                    const newGrid = produce(grid, (gridCopy) => {
-                      if (temptype === 'hot') {
-                        gridCopy[i][k] = 0;
-                        addHot([i, k]);
-                      } else if (temptype === 'cold') {
-                        gridCopy[i][k] = 1;
-                        addCold([i, k]);
-                      } else {
-                        gridCopy[i][k] = 0.5;
-                        addAmb([i, k]);
-                      }
-                    });
-                    setGrid(newGrid);
-                  }
-                }}
-                style={{
-                  width: 20,
-                  height: 20,
-                  background: rgbToHex(
-                    255 * (1 - grid[i][k]),
-                    0,
-                    255 * grid[i][k]
-                  ),
-                  border: gridBorder ? '1px solid black' : '',
-                }}
-              />
-            ))
-          )}
-        </div>
+        Cells to be plotted:
+        {plotcell.map((pp, i) => (
+          <Typography
+            key={`${pp[0]},${pp[1]}`}
+          >{` (${pp[0]},${pp[1]})`}</Typography>
+        ))}
+      </Grid>
+
+      <Grid container justify="center" className={classes.gridcont}>
+        <Card elevation={10} className={classes.card}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: `repeat(${numCols}, 20px)`,
+            }}
+          >
+            {grid.map((rows, i) =>
+              rows.map((col, k) => (
+                <div
+                  key={`${i}-${k}`}
+                  onClick={() => {
+                    if (cellSelection === 'plot') {
+                      // console.log("addceel bro");
+                      addPlotCell([i, k]);
+                    } else {
+                      const newGrid = produce(grid, (gridCopy) => {
+                        gridCopy[i][k] = selectedCellTemp;
+                        addCellTemp([i, k, selectedCellTemp]);
+                      });
+                      setGrid(newGrid);
+                    }
+                  }}
+                  style={{
+                    width: 20,
+                    height: 20,
+                    background: rgbToHex(
+                      255 * (1 - grid[i][k]),
+                      0,
+                      255 * grid[i][k]
+                    ),
+                    border: gridBorder ? '1px solid black' : '',
+                  }}
+                />
+              ))
+            )}
+          </div>
+        </Card>
       </Grid>
     </>
   );
